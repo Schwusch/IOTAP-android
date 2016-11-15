@@ -4,9 +4,13 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +31,7 @@ public class MainActivity extends Activity {
     OutputStream mmOutputStream;
     static InputStream mmInputStream;
     Intent mServiceIntent;
+    ResponseReceiver receiver;
 
     public void logToTextView(final String text) {
         runOnUiThread(new Runnable() {
@@ -42,6 +47,12 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Register broadcast receiver for bluetooth error messages
+        IntentFilter mStatusIntentFilter = new IntentFilter(Constants.BROADCAST_ACTION);
+        mStatusIntentFilter.addDataScheme("http");
+        receiver = new ResponseReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, mStatusIntentFilter);
 
         tvText = (TextView) findViewById(R.id.tvText);
         fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -122,5 +133,17 @@ public class MainActivity extends Activity {
     {
         mServiceIntent = new Intent(this, DataCollectorService.class);
         startService(mServiceIntent);
+    }
+
+    // Broadcast receiver for receiving status updates from the DataCollectorService
+    private class ResponseReceiver extends BroadcastReceiver
+    {
+        // Prevents instantiation
+        private ResponseReceiver() {
+        }
+        // Called when the BroadcastReceiver gets an Intent it's registered to receive
+        public void onReceive(Context context, Intent intent) {
+            logToTextView(intent.getStringExtra(Constants.EXTENDED_DATA_STATUS));
+        }
     }
 }
