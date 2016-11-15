@@ -42,7 +42,7 @@ public class DataCollectorService extends IntentService {
 
                             handler.post(new Runnable() {
                                 public void run() {
-
+                                    //Do something with the text received from Arduino
                                 }
                             });
                         } else {
@@ -53,6 +53,7 @@ public class DataCollectorService extends IntentService {
             } catch (Exception ex) {
                 ex.printStackTrace();
                 stopWorker = true;
+                //Notifying main activity that connection error occured.
                 Intent localIntent = new Intent(Constants.BROADCAST_ACTION)
                                 .putExtra(Constants.EXTENDED_DATA_STATUS, "Connection Error");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
