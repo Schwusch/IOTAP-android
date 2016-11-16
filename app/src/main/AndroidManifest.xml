@@ -11,6 +11,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
@@ -21,9 +22,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <service
             android:name=".DataCollectorService"
             android:exported="false"/>
+
+        <receiver android:name="com.example.schwusch.iotap_app.MainActivity$ResponseReceiver" android:enabled="true">
+            <intent-filter>
+                <action android:name="IOTAP" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

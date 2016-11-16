@@ -6,6 +6,6 @@ package com.example.schwusch.iotap_app;
  */
 
 final class Constants {
-    static final String BROADCAST_ACTION = "com.example.android.threadsample.BROADCAST";
-    static final String EXTENDED_DATA_STATUS = "com.example.android.threadsample.STATUS";
+    static final String BROADCAST_ACTION = "IOTAP";
+    static final String EXTENDED_DATA_STATUS = "MESSAGE";
 }
