@@ -4,8 +4,9 @@ import android.app.IntentService;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
+import android.os.Vibrator;
 import android.support.v4.content.LocalBroadcastManager;
 
 import java.io.InputStream;
@@ -87,28 +88,33 @@ import java.util.UUID;
         boolean stopWorker = false;
         int readBufferPosition = 0;
         byte[] readBuffer = new byte[1024];
-        final byte delimiter = 10;
-        final Handler handler = new Handler();
+        final byte ENDLINE = 10;
+
+        // Vibrate to indicate things went well :P
+        long[] pattern = {0,75,150,75};
+        ((Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(pattern, -1);
 
         while(!Thread.currentThread().isInterrupted() && !stopWorker)
         {
             try {
                 int bytesAvailable = mmInputStream.available();
+
                 if(bytesAvailable > 0) {
                     byte[] packetBytes = new byte[bytesAvailable];
                     mmInputStream.read(packetBytes);
+
                     for(int i=0;i<bytesAvailable;i++) {
                         byte b = packetBytes[i];
-                        if(b == delimiter) {
+                        if(b == ENDLINE) {
                             byte[] encodedBytes = new byte[readBufferPosition];
                             System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
                             final String data = new String(encodedBytes, "US-ASCII");
                             readBufferPosition = 0;
+                            // Post received data to GUI
+                            Intent localIntent = new Intent(Constants.BROADCAST_ACTION)
+                                    .putExtra(Constants.EXTENDED_DATA_STATUS, data);
+                            LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
 
-                            handler.post(() -> {
-                                        //Do something with the text received from Arduino
-                                    }
-                            );
                         } else {
                             readBuffer[readBufferPosition++] = b;
                         }
