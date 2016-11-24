@@ -107,7 +107,6 @@ public class GestureDetectorService extends IntentService {
     }
 
     private void loadClassifier() {
-        ((Vibrator) getSystemService(Context.VIBRATOR_SERVICE)).vibrate(1000);
         LocalBroadcastManager.getInstance(this).sendBroadcast(
                 new Intent(Constants.IOTAP_GUI)
                         .putExtra(Constants.EXTENDED_DATA_STATUS, "Loading Classifier not implemented!")

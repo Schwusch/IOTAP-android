@@ -38,7 +38,7 @@ public class DataCollectorService extends IntentService {
 
         // Check if adapter exists and is enabled
         if (mBluetoothAdapter != null && !mBluetoothAdapter.isEnabled()) {
-            Intent localIntent = new Intent(Constants.IOTAP_GUI)
+            Intent localIntent = new Intent(Constants.IOTAP_BT_FAIL)
                     .putExtra(Constants.EXTENDED_DATA_STATUS, "Bluetooth Not Enabled!");
             LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
 
@@ -54,7 +54,7 @@ public class DataCollectorService extends IntentService {
                 }
                 if (mmDevice == null) {
                     LocalBroadcastManager.getInstance(this).sendBroadcast(
-                            new Intent(Constants.IOTAP_GUI).putExtra(
+                            new Intent(Constants.IOTAP_BT_FAIL).putExtra(
                                     Constants.EXTENDED_DATA_STATUS,
                                     "No paired bluetooth device named " +
                                             Constants.BT_DEVICE_NAME +
@@ -78,14 +78,14 @@ public class DataCollectorService extends IntentService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            Intent localIntent = new Intent(Constants.IOTAP_GUI)
-                    .putExtra(Constants.EXTENDED_DATA_STATUS, "Bluetooth Error...");
+            Intent localIntent = new Intent(Constants.IOTAP_BT_FAIL)
+                    .putExtra(Constants.EXTENDED_DATA_STATUS, "Bluetooth Can't Connect!");
             LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
 
             return false;
         }
 
-        Intent localIntent = new Intent(Constants.IOTAP_GUI)
+        Intent localIntent = new Intent(Constants.IOTAP_BT_SUCCESS)
                 .putExtra(Constants.EXTENDED_DATA_STATUS, "Bluetooth Opened!");
         LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
 
@@ -132,8 +132,8 @@ public class DataCollectorService extends IntentService {
                 ex.printStackTrace();
                 stopWorker = true;
                 //Notifying main activity that connection error occured.
-                Intent localIntent = new Intent(Constants.IOTAP_GUI)
-                        .putExtra(Constants.EXTENDED_DATA_STATUS, "Connection Error");
+                Intent localIntent = new Intent(Constants.IOTAP_BT_FAIL)
+                        .putExtra(Constants.EXTENDED_DATA_STATUS, "Bluetooth Connection Lost!");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
             }
         }
