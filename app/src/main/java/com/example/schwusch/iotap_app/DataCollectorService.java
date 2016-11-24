@@ -23,7 +23,6 @@ import java.util.UUID;
     BluetoothAdapter mBluetoothAdapter;
     BluetoothSocket mmSocket;
     BluetoothDevice mmDevice;
-    OutputStream mmOutputStream;
     InputStream mmInputStream;
 
     public DataCollectorService(){
@@ -39,20 +38,31 @@ import java.util.UUID;
     private boolean findBT() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
+        // Check if adapter exists and is enabled
         if (mBluetoothAdapter != null && !mBluetoothAdapter.isEnabled()) {
             Intent localIntent = new Intent(Constants.BROADCAST_ACTION)
                     .putExtra(Constants.EXTENDED_DATA_STATUS, "Bluetooth Not Enabled!");
             LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-        }
 
-        if (mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()) {
+        } else if (mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()) {
             Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
             if (pairedDevices.size() > 0) {
                 for (BluetoothDevice device : pairedDevices) {
-                    if (device.getName().equals("IOTAP")) {
+                    if (device.getName().equals(Constants.BT_DEVICE_NAME)) {
                         mmDevice = device;
+                        // Correct paired device is found
                         return true;
                     }
+                }
+                if (mmDevice == null) {
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(
+                            new Intent(Constants.BROADCAST_ACTION).putExtra(
+                                    Constants.EXTENDED_DATA_STATUS,
+                                    "No paired bluetooth device named " +
+                                            Constants.BT_DEVICE_NAME +
+                                            " on this phone."
+                            )
+                    );
                 }
             }
         }
@@ -61,11 +71,11 @@ import java.util.UUID;
     }
 
     private boolean openBT() {
-        UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
         try {
-            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+            mmSocket = mmDevice.createRfcommSocketToServiceRecord(
+                    UUID.fromString(Constants.BT_SERVICE_UUID)
+            );
             mmSocket.connect();
-            mmOutputStream = mmSocket.getOutputStream();
             mmInputStream = mmSocket.getInputStream();
 
         } catch (Exception e){
@@ -114,6 +124,7 @@ import java.util.UUID;
                             Intent localIntent = new Intent(Constants.BROADCAST_ACTION)
                                     .putExtra(Constants.EXTENDED_DATA_STATUS, data);
                             LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+                            
 
                         } else {
                             readBuffer[readBufferPosition++] = b;
