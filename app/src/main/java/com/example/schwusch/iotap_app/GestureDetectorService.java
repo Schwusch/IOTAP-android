@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Vibrator;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -15,7 +16,6 @@ import java.util.Queue;
 
 /**
  * Created by Jonathan Böcker on 2016-11-24.
- *
  */
 
 public class GestureDetectorService extends IntentService {
@@ -26,21 +26,19 @@ public class GestureDetectorService extends IntentService {
 
     public GestureDetectorService() {
         super("GD");
-
-        for (int i = 0; i < Constants.SENSOR_VALUES; i++) {
-            movingWindow.add(new LinkedList<>());
-            filteredMovingWindow.add(new LinkedList<>());
-        }
+        initMovingWindows();
     }
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        loadClassifier();
         IntentFilter mStatusIntentFilter = new IntentFilter();
         mStatusIntentFilter.addAction(Constants.IOTAP_GUI);
         receiver = new ResponseReceiver();
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver, mStatusIntentFilter);
 
-        while (!Thread.currentThread().isInterrupted()) { }
+        while (!Thread.currentThread().isInterrupted()) {
+        }
     }
 
     // Broadcast receiver for receiving status updates from the DataCollectorService
@@ -50,7 +48,7 @@ public class GestureDetectorService extends IntentService {
             try {
                 Integer[] ret =
                         parseStringSample(intent.getStringExtra(Constants.EXTENDED_DATA_STATUS));
-                if(ret != null) {
+                if (ret != null) {
                     // If window is full, dequeue one sample from head before queuing another
                     if (movingWindow.get(0).size() > Constants.MOVING_WINDOW_SIZE - 1) {
                         movingWindow.forEach(Queue::poll);
@@ -58,7 +56,7 @@ public class GestureDetectorService extends IntentService {
                     }
 
                     // Save sample to moving window tail
-                    for(int i = 0; i < Constants.SENSOR_VALUES; i++) {
+                    for (int i = 0; i < Constants.SENSOR_VALUES; i++) {
                         movingWindow.get(i).add(ret[i]);
                         filteredMovingWindow.get(i).add(
                                 filterFIR(movingWindow.get(i))
@@ -67,7 +65,7 @@ public class GestureDetectorService extends IntentService {
 
                     // Count down to see if its time for classification
                     counter--;
-                    if (counter == 0){
+                    if (counter == 0) {
                         recognizeGesture(filteredMovingWindow);
                         counter = Constants.OVERLAP;
                     }
@@ -84,14 +82,14 @@ public class GestureDetectorService extends IntentService {
                 data.size() - Constants.MOVING_AVERAGE_LENGTH,
                 data.size());
 
-        return Arrays.stream(lastValues).reduce(0, (a,b) -> a+b) / lastValues.length;
+        return Arrays.stream(lastValues).reduce(0, (a, b) -> a + b) / lastValues.length;
     }
 
     private void recognizeGesture(ArrayList<Queue<Integer>> data) {
         // TODO: use filteredMovingWindow to detect gestures
     }
 
-    private Integer[] parseStringSample(String sample) throws Exception {
+    private Integer[] parseStringSample(String sample) {
         String[] parts = sample.split(" ");
         if (parts.length != Constants.SENSOR_VALUES) {
             Log.d("SAMPLE_ERROR", "Number of values:" + parts.length);
@@ -99,5 +97,20 @@ public class GestureDetectorService extends IntentService {
         } else {
             return (Integer[]) Arrays.stream(parts).map(Integer::parseInt).toArray();
         }
+    }
+
+    private void initMovingWindows() {
+        for (int i = 0; i < Constants.SENSOR_VALUES; i++) {
+            movingWindow.add(new LinkedList<>());
+            filteredMovingWindow.add(new LinkedList<>());
+        }
+    }
+
+    private void loadClassifier() {
+        ((Vibrator) getSystemService(Context.VIBRATOR_SERVICE)).vibrate(1000);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(
+                new Intent(Constants.IOTAP_GUI)
+                        .putExtra(Constants.EXTENDED_DATA_STATUS, "Loading Classifier not implemented!")
+        );
     }
 }

@@ -15,16 +15,15 @@ import java.util.UUID;
 
 /**
  * Created by Jonathan Böcker on 2016-11-15.
- *
  */
 
-    public class DataCollectorService extends IntentService {
+public class DataCollectorService extends IntentService {
     BluetoothAdapter mBluetoothAdapter;
     BluetoothSocket mmSocket;
     BluetoothDevice mmDevice;
     InputStream mmInputStream;
 
-    public DataCollectorService(){
+    public DataCollectorService() {
         super("DataCollectorService");
     }
 
@@ -77,7 +76,7 @@ import java.util.UUID;
             mmSocket.connect();
             mmInputStream = mmSocket.getInputStream();
 
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             Intent localIntent = new Intent(Constants.IOTAP_GUI)
                     .putExtra(Constants.EXTENDED_DATA_STATUS, "Bluetooth Error...");
@@ -93,28 +92,27 @@ import java.util.UUID;
         return true;
     }
 
-    private void collectData(){
+    private void collectData() {
         boolean stopWorker = false;
         int readBufferPosition = 0;
         byte[] readBuffer = new byte[1024];
         final byte ENDLINE = 10;
 
         // Vibrate to indicate things went well :P
-        long[] pattern = {0,75,150,75};
+        long[] pattern = {0, 75, 150, 75};
         ((Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(pattern, -1);
 
-        while(!Thread.currentThread().isInterrupted() && !stopWorker)
-        {
+        while (!Thread.currentThread().isInterrupted() && !stopWorker) {
             try {
                 int bytesAvailable = mmInputStream.available();
 
-                if(bytesAvailable > 0) {
+                if (bytesAvailable > 0) {
                     byte[] packetBytes = new byte[bytesAvailable];
                     mmInputStream.read(packetBytes);
 
-                    for(int i=0;i<bytesAvailable;i++) {
+                    for (int i = 0; i < bytesAvailable; i++) {
                         byte b = packetBytes[i];
-                        if(b == ENDLINE) {
+                        if (b == ENDLINE) {
                             byte[] encodedBytes = new byte[readBufferPosition];
                             System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
                             final String data = new String(encodedBytes, "US-ASCII");
