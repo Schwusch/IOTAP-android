@@ -10,7 +10,6 @@ import android.os.Vibrator;
 import android.support.v4.content.LocalBroadcastManager;
 
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
@@ -40,7 +39,7 @@ import java.util.UUID;
 
         // Check if adapter exists and is enabled
         if (mBluetoothAdapter != null && !mBluetoothAdapter.isEnabled()) {
-            Intent localIntent = new Intent(Constants.BROADCAST_ACTION)
+            Intent localIntent = new Intent(Constants.IOTAP_GUI)
                     .putExtra(Constants.EXTENDED_DATA_STATUS, "Bluetooth Not Enabled!");
             LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
 
@@ -56,7 +55,7 @@ import java.util.UUID;
                 }
                 if (mmDevice == null) {
                     LocalBroadcastManager.getInstance(this).sendBroadcast(
-                            new Intent(Constants.BROADCAST_ACTION).putExtra(
+                            new Intent(Constants.IOTAP_GUI).putExtra(
                                     Constants.EXTENDED_DATA_STATUS,
                                     "No paired bluetooth device named " +
                                             Constants.BT_DEVICE_NAME +
@@ -80,14 +79,14 @@ import java.util.UUID;
 
         } catch (Exception e){
             e.printStackTrace();
-            Intent localIntent = new Intent(Constants.BROADCAST_ACTION)
+            Intent localIntent = new Intent(Constants.IOTAP_GUI)
                     .putExtra(Constants.EXTENDED_DATA_STATUS, "Bluetooth Error...");
             LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
 
             return false;
         }
 
-        Intent localIntent = new Intent(Constants.BROADCAST_ACTION)
+        Intent localIntent = new Intent(Constants.IOTAP_GUI)
                 .putExtra(Constants.EXTENDED_DATA_STATUS, "Bluetooth Opened!");
         LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
 
@@ -120,11 +119,11 @@ import java.util.UUID;
                             System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
                             final String data = new String(encodedBytes, "US-ASCII");
                             readBufferPosition = 0;
-                            // Post received data to GUI
-                            Intent localIntent = new Intent(Constants.BROADCAST_ACTION)
-                                    .putExtra(Constants.EXTENDED_DATA_STATUS, data);
-                            LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-                            
+                            // Post received data to Gesture Detector
+                            LocalBroadcastManager.getInstance(this).sendBroadcast(
+                                    new Intent(Constants.IOTAP_GD)
+                                            .putExtra(Constants.EXTENDED_DATA_STATUS, data)
+                            );
 
                         } else {
                             readBuffer[readBufferPosition++] = b;
@@ -135,7 +134,7 @@ import java.util.UUID;
                 ex.printStackTrace();
                 stopWorker = true;
                 //Notifying main activity that connection error occured.
-                Intent localIntent = new Intent(Constants.BROADCAST_ACTION)
+                Intent localIntent = new Intent(Constants.IOTAP_GUI)
                         .putExtra(Constants.EXTENDED_DATA_STATUS, "Connection Error");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
             }

@@ -29,13 +29,15 @@ public class MainActivity extends Activity {
 
         // Register broadcast receiver for bluetooth error messages
         IntentFilter mStatusIntentFilter = new IntentFilter();
-        mStatusIntentFilter.addAction(Constants.BROADCAST_ACTION);
+        mStatusIntentFilter.addAction(Constants.IOTAP_GUI);
         receiver = new ResponseReceiver();
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver, mStatusIntentFilter);
 
         tvText = (TextView) findViewById(R.id.tvText);
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(view -> beginListenForData());
+
+        startService(new Intent(this, GestureDetectorService.class));
     }
 
     void beginListenForData() {
