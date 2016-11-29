@@ -36,10 +36,10 @@ int deltaThreshold = 50;
 
 String portName="";
 PrintWriter file,file2;
-float minGyro=-40000;
-float maxGyro=30000;
-float minAccel=-1000;
-float maxAccel=6000;
+float minGyro=-15000;
+float maxGyro=5000;
+float minAccel=-200;
+float maxAccel=1000;
 // Globals
 static final int g_winW=820;           // Window Width
 static final int g_winH=600;           // Window Height
