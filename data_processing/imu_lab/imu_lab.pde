@@ -16,10 +16,12 @@ import static javax.swing.JOptionPane.*;
 
 import java.awt.Toolkit;
 
-import processing.sound.*;
+import ddf.minim.*;
 
-SoundFile hyah = new SoundFile(this, "hyah.wav");
-SoundFile huff = new SoundFile(this, "huff.wav");
+Minim minim;
+
+AudioPlayer hyah;
+AudioPlayer huff;
 
 String lable="jonathan";
 int counter=1;
@@ -27,10 +29,10 @@ int insNum=16;         //length of sliding window
 int ins=1;         //
 boolean trainFile=true;         // generates training dataset
 boolean logFile=false;         // logs sensordata
-boolean record = true;
+boolean record = false;
 long stamp=0;
 
-int deltaAlarm = 50;
+int deltaThreshold = 50;
 
 String portName="";
 PrintWriter file,file2;
@@ -59,6 +61,10 @@ PFont g_font;
 void setup()
 {
         size(820,600,P2D);
+        minim = new Minim(this);
+        hyah = minim.loadFile("hyah.wav");
+        huff = minim.loadFile("huff.wav");
+        
         if(trainFile) {
                 file=createWriter(lable+"_train.csv"); //bool tells to append
                 file2=createWriter(lable+"_train_filtered.csv");
@@ -203,35 +209,15 @@ void processSerialData(){
                                     file.print(sb);
                                     file.flush();
                                     ins++;
+                                    
+                                    huff.rewind();
+                                    huff.play();
                                   }
-                                  
-                                        /*if(counter==1) {
-                                                file.print("\r\n"+lable);
-                                                file2.print("\r\n"+lable);
-                                        }
-                                        
-                                        tempStr=","+xAccel+","+yAccel+","+zAccel+","+vRef+","+xRate+","+yRate;
-                                        file.print(tempStr); //(string, start char, end char)
-                                        String tempStr2=","+g_xAccel.delta+","+g_yAccel.delta+","+g_zAccel.delta+","+g_vRef.delta+","+g_xRate.delta+","+g_yRate.delta;
-                                        file2.print(tempStr2); //(string, start char, end char)
-                                        if(counter==insNum) {
-                                                counter=0;
-                                                record= false;
-                                                fill(0,0,0);
-                                                background(102);
-                                                text("Gesture Type:"+lable+",  Gesture Number:"+ins,400,530);
-                                                Toolkit.getDefaultToolkit().beep();
-
-                                                ins++;
-                                        }
-                                        file.flush();
-                                        file2.flush();
-                                        counter++;*/
                                 }
                                 
-                                  if(!record && (Math.abs(g_yAccel.fv - g_yAccel.pfv) > deltaAlarm ||
-                                    Math.abs(g_xAccel.fv - g_xAccel.pfv) > deltaAlarm ||
-                                    Math.abs(g_zAccel.fv - g_zAccel.pfv) > deltaAlarm)) {
+                                  if(!record && (Math.abs(g_yAccel.fv - g_yAccel.pfv) > deltaThreshold ||
+                                    Math.abs(g_xAccel.fv - g_xAccel.pfv) > deltaThreshold ||
+                                    Math.abs(g_zAccel.fv - g_zAccel.pfv) > deltaThreshold)) {
                                       
                                       g_xAccel.startRecording();
                                       g_yAccel.startRecording();
@@ -241,6 +227,8 @@ void processSerialData(){
                                       g_yRate.startRecording();
                                       
                                       record = true;
+                                      hyah.rewind();
+                                      hyah.play();
                                    }
                         }
                 }
