@@ -9,10 +9,18 @@ import android.os.Vibrator;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
+
+import weka.classifiers.Classifier;
 
 /**
  * Created by Jonathan Böcker on 2016-11-24.
@@ -24,9 +32,26 @@ public class GestureDetectorService extends IntentService {
     private ResponseReceiver receiver;
     private int counter = Constants.OVERLAP;
 
-    public GestureDetectorService() {
+    public GestureDetectorService() throws Exception {
         super("GD");
         initMovingWindows();
+        InputStream ins = getResources().openRawResource(R.raw.classifier);
+        ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
+        int size = 0;
+        // Read the entire resource into a local byte buffer.
+        byte[] buffer = new byte[1024];
+        while((size=ins.read(buffer,0,1024))>=0){
+            outputStream.write(buffer,0,size);
+        }
+        ins.close();
+        buffer=outputStream.toByteArray();
+
+        FileOutputStream fos = new FileOutputStream("classifier.model");
+        fos.write(buffer);
+        fos.close();
+
+        Classifier cls = (Classifier) weka.core.SerializationHelper.read("classifier.model");
+
     }
 
     @Override
@@ -62,6 +87,8 @@ public class GestureDetectorService extends IntentService {
                                 filterFIR(movingWindow.get(i))
                         );
                     }
+
+
 
                     // Count down to see if its time for classification
                     counter--;
