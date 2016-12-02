@@ -7,19 +7,13 @@
 
 // I wrote an arduino app that sends data in the format expected by this app.
 // The arduino app sends accelerometer and gyroscope data.
-
 import processing.serial.*;
-
 import java.io.*;
-
 import static javax.swing.JOptionPane.*;
-
 import java.awt.Toolkit;
-
 import ddf.minim.*;
 
 Minim minim;
-
 AudioPlayer hyah;
 AudioPlayer huff;
 
@@ -67,13 +61,12 @@ void setup()
         
         if(trainFile) {
                 file=createWriter(lable+"_train.csv"); //bool tells to append
-                file2=createWriter(lable+"_train_filtered.csv");
+                file2=createWriter(lable+"_train_plot.csv");
                 file.print("Lable,"); //write the file header
-                file2.print("Lable,"); //write the file header
                 for(int i=1; i<=insNum; i=i+1) {
                         file.print("AccX"+i+",AccY"+i+",AccZ"+i+",GyrX"+i+",GyrY"+i+",GyrZ"+i+","); //write the file header
-                        file2.print("AccX"+i+",AccY"+i+",AccZ"+i+",GyrX"+i+",GyrY"+i+",GyrZ"+i+","); //write the file header
                 }
+                file2.print("#,AccX,AccY,AccZ,GyrX,GyrY,GyrZ\r\n"); //write the file header
                 file.flush();
                 file2.flush();
         }
@@ -195,11 +188,17 @@ void processSerialData(){
                                     float[] yRateNorm = normalize(gyro_min, gyro_max, g_yRate.getRecording());
                                     
                                     StringBuilder sb = new StringBuilder();
+                                    StringBuilder sb2 = new StringBuilder();
+                                    
                                     sb.append("\r\n" + lable);
                                     
                                     for(int i = 0; i < insNum; i++) {
                                       sb.append("," + xAccelNorm[i] + "," + yAccelNorm[i] + "," + zAccelNorm[i] + 
                                                  "," + vRefNorm[i] + "," + xRateNorm[i] + "," + yRateNorm[i]);
+                                                 
+                                      sb2.append(stamp + "," + xAccelNorm[i] + "," + yAccelNorm[i] + "," + zAccelNorm[i] + 
+                                                 "," + vRefNorm[i] + "," + xRateNorm[i] + "," + yRateNorm[i] + "\r\n");
+                                      stamp++;
                                     }
                                     counter=0;
                                     record= false;
@@ -208,6 +207,8 @@ void processSerialData(){
                                     text("Gesture Type:"+lable+",  Gesture Number:"+ins,400,530);
                                     file.print(sb);
                                     file.flush();
+                                    file2.print(sb2);
+                                    file2.flush();
                                     ins++;
                                     
                                     huff.rewind();
@@ -410,6 +411,10 @@ String port() {
 void mousePressed() {
         if(file != null) file.close();
         if(file2 != null) file2.close();
+        Runtime rt = Runtime.getRuntime();
+        try {
+                rt.exec("gnome-terminal --working-directory=IOTAP-android/data_processing/imu_lab --execute python plot_log_filtered.py " + lable + "_train_plot.csv");
+        } catch(Exception s) {s.printStackTrace();}
         exit();
         
 }
