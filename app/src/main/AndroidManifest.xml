@@ -26,30 +26,6 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".DataCollectorService"
-            android:exported="false"/>
-
-        <receiver android:name="com.example.schwusch.iotap_app.MainActivity$ResponseReceiver"
-            android:enabled="true">
-            <intent-filter>
-                <action android:name="IOTAP_GUI" />
-                <action android:name="IOTAP_BT_FAIL" />
-                <action android:name="IOTAP_BT_SUCCESS" />
-            </intent-filter>
-        </receiver>
-
-        <service
-            android:name=".GestureDetectorService"
-            android:exported="false"/>
-
-        <receiver android:name="com.example.schwusch.iotap_app.GestureDetectorService$ResponseReceiver"
-            android:enabled="true">
-            <intent-filter>
-                <action android:name="IOTAP_GD" />
-            </intent-filter>
-        </receiver>
-
     </application>
 
 </manifest>
