@@ -16,11 +16,11 @@ class GestureDetector {
     private ArrayList<LinkedList<Integer>> movingWindow = new ArrayList<>();
     private ArrayList<LinkedList<Integer>> filteredMovingWindow = new ArrayList<>();
     private Classifier cls;
-    private Activity mainActivity;
+    private MainActivity mainActivity;
     private boolean record = false;
     private int recordCounter = 0;
 
-    GestureDetector(Activity mainActivity) throws Exception {
+    GestureDetector(MainActivity mainActivity) throws Exception {
         initMovingWindows();
         this.mainActivity = mainActivity;
     }
@@ -47,6 +47,7 @@ class GestureDetector {
                 record = true;
                 Vibrator v = (Vibrator) mainActivity.getSystemService(Context.VIBRATOR_SERVICE);
                 v.vibrate(100);
+                mainActivity.runOnUiThread(() -> mainActivity.snack("Gesture Detected!"));
             }
 
             if (record && recordCounter < Constants.MOVING_WINDOW_SIZE + 1) {
