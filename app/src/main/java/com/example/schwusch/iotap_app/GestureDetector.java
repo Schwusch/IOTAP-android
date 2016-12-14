@@ -1,11 +1,14 @@
 package com.example.schwusch.iotap_app;
 
 import android.app.Activity;
+import android.content.Context;
+import android.os.Vibrator;
 import android.util.Log;
 
 import java.io.ObjectInputStream;
 import java.util.LinkedList;
 import java.util.ArrayList;
+import java.util.List;
 
 import weka.classifiers.Classifier;
 
@@ -14,10 +17,11 @@ class GestureDetector {
     private ArrayList<LinkedList<Integer>> filteredMovingWindow = new ArrayList<>();
     private Classifier cls;
     private Activity mainActivity;
+    private boolean record = false;
+    private int recordCounter = 0;
 
     GestureDetector(Activity mainActivity) throws Exception {
         initMovingWindows();
-        loadClassifier(mainActivity);
         this.mainActivity = mainActivity;
     }
 
@@ -39,7 +43,32 @@ class GestureDetector {
                         filterFIR(movingWindow.get(i))
                 );
             }
+            if (!record && isThresholdExceeded()) {
+                record = true;
+                Vibrator v = (Vibrator) mainActivity.getSystemService(Context.VIBRATOR_SERVICE);
+                v.vibrate(100);
+            }
+
+            if (record && recordCounter < Constants.MOVING_WINDOW_SIZE + 1) {
+                recordCounter++;
+            } else if(record) {
+                record = false;
+                recordCounter = 0;
+            }
         }
+    }
+
+    private boolean isThresholdExceeded() {
+        boolean exceeded = false;
+        if(filteredMovingWindow.get(0).size() > 2) {
+            for (int i = 0; i < 3; i++) {
+                int delta = filteredMovingWindow.get(i).getLast() - filteredMovingWindow.get(i).get(filteredMovingWindow.get(i).size() - 2);
+                if (delta > Constants.ACC_THRESHOLD || delta < -Constants.ACC_THRESHOLD) {
+                    exceeded = true;
+                }
+            }
+        }
+        return exceeded;
     }
 
     private Integer[] parseStringSample(String sample) {
@@ -50,15 +79,19 @@ class GestureDetector {
         } else {
             Integer values[] = new Integer[Constants.SENSOR_VALUES];
             for (int i = 1; i < parts.length; i++) {
-                values[i] = Integer.parseInt(parts[i]);
+                values[i - 1] = Integer.parseInt(parts[i]);
             }
             return values;
         }
     }
 
     private Integer filterFIR(LinkedList<Integer> data) {
-        LinkedList<Integer> lastValues = (LinkedList<Integer>)
-                data.subList(data.size() - Constants.MOVING_AVERAGE_LENGTH, data.size());
+        List<Integer> lastValues;
+        if(data.size() > Constants.MOVING_AVERAGE_LENGTH) {
+            lastValues = data.subList(data.size() - Constants.MOVING_AVERAGE_LENGTH, data.size());
+        } else {
+            lastValues = data;
+        }
         Integer sum = 0;
         for (Integer val: lastValues) {
             sum += val;
@@ -73,7 +106,7 @@ class GestureDetector {
         }
     }
 
-    private void loadClassifier(Activity mainActivity) throws Exception {
+    void loadClassifier() throws Exception {
         ObjectInputStream ois = new ObjectInputStream(
                 mainActivity.getResources().openRawResource(R.raw.classifier));
         cls = (Classifier) ois.readObject();

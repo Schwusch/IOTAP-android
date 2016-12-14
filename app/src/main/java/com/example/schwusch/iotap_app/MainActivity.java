@@ -1,23 +1,11 @@
 package com.example.schwusch.iotap_app;
 
 import android.app.Activity;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.NotificationCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -45,7 +33,12 @@ public class MainActivity extends Activity {
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(view -> beginListenForData());
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                beginListenForData();
+            }
+        });
     }
 
     void beginListenForData() {

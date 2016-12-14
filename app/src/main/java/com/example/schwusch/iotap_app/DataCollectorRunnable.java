@@ -1,6 +1,5 @@
 package com.example.schwusch.iotap_app;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -9,7 +8,7 @@ import java.io.InputStream;
 import java.util.Set;
 import java.util.UUID;
 
-public class DataCollectorRunnable implements Runnable {
+class DataCollectorRunnable implements Runnable {
     private MainActivity mainActivity;
     private BluetoothDevice mmDevice;
     private InputStream mmInputStream;
@@ -75,6 +74,7 @@ public class DataCollectorRunnable implements Runnable {
 
     private void collectData() throws Exception {
         this.detector = new GestureDetector(mainActivity);
+        this.detector.loadClassifier();
         boolean stopWorker = false;
         int readBufferPosition = 0;
         byte[] readBuffer = new byte[1024];
