@@ -1,6 +1,5 @@
 package com.example.schwusch.iotap_app;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Vibrator;
 import android.util.Log;
@@ -19,6 +18,10 @@ class GestureDetector {
     private MainActivity mainActivity;
     private boolean record = false;
     private int recordCounter = 0;
+    private int accMax = Integer.MIN_VALUE;
+    private int accMin = Integer.MAX_VALUE;
+    private int gyrMax = Integer.MIN_VALUE;
+    private int gyrMin = Integer.MAX_VALUE;
 
     GestureDetector(MainActivity mainActivity) throws Exception {
         initMovingWindows();
@@ -29,7 +32,7 @@ class GestureDetector {
         Integer[] values = parseStringSample(sample);
         if (values != null) {
             // If window is full, dequeue one sample from head before queuing another
-            if (movingWindow.get(0).size() > Constants.MOVING_WINDOW_SIZE - 1) {
+            if (movingWindow.get(0).size() == Constants.MOVING_WINDOW_SIZE) {
                 for (int i = 0; i < movingWindow.size(); i++) {
                     movingWindow.get(i).poll();
                     filteredMovingWindow.get(i).poll();
@@ -51,12 +54,64 @@ class GestureDetector {
             }
 
             if (record && recordCounter < Constants.MOVING_WINDOW_SIZE + 1) {
+                for (int i = 0; i < Constants.SENSOR_VALUES/2; i++) {
+                    accMax = Math.max(filteredMovingWindow.get(i).getLast(), accMax);
+                    accMin = Math.min(filteredMovingWindow.get(i).getLast(), accMin);
+                }
+
+                for (int i = Constants.SENSOR_VALUES/2; i < Constants.SENSOR_VALUES; i++) {
+                    gyrMax = Math.max(filteredMovingWindow.get(i).getLast(), gyrMax);
+                    gyrMin = Math.min(filteredMovingWindow.get(i).getLast(), gyrMin);
+                }
                 recordCounter++;
+
             } else if(record) {
+                classify();
+
                 record = false;
                 recordCounter = 0;
+                accMax = Integer.MIN_VALUE;
+                accMin = Integer.MAX_VALUE;
+                gyrMax = Integer.MIN_VALUE;
+                gyrMin = Integer.MAX_VALUE;
             }
         }
+    }
+
+    private void classify() {
+        float values[][] = normalizeAll();
+        float flattenedValues[] = flattenData(values);
+        //TODO: Give the values to the classifier somehow
+    }
+
+    private float[] flattenData(float[][] data) {
+        float flattenedValues[] = new float[data.length * data[0].length];
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                flattenedValues[(data[0].length * i) + j] = data[i][j];
+            }
+        }
+        return flattenedValues;
+    }
+
+    private float[][] normalizeAll() {
+        float values[][] = new float[6][Constants.MOVING_WINDOW_SIZE];
+
+        for (int i = 0; i < Constants.SENSOR_VALUES/2; i++) {
+            values[i] = normalize(accMin, accMax, filteredMovingWindow.get(i));
+            values[i + Constants.SENSOR_VALUES/2] = normalize(gyrMin, gyrMax, filteredMovingWindow.get(i + Constants.SENSOR_VALUES/2));
+        }
+        return values;
+    }
+
+    float[] normalize(int offset, int max, List<Integer> data) {
+        int span = max - offset;
+        float[] returnVals = new float[data.size()];
+
+        for(int i = 0; i < data.size(); i++) {
+            returnVals[i] = (float) (data.get(i) - offset) / (float) span;
+        }
+        return returnVals;
     }
 
     private boolean isThresholdExceeded() {
@@ -66,6 +121,7 @@ class GestureDetector {
                 int delta = filteredMovingWindow.get(i).getLast() - filteredMovingWindow.get(i).get(filteredMovingWindow.get(i).size() - 2);
                 if (delta > Constants.ACC_THRESHOLD || delta < -Constants.ACC_THRESHOLD) {
                     exceeded = true;
+                    break;
                 }
             }
         }
