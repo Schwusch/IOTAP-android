@@ -56,13 +56,12 @@ class GestureDetector {
 
             if (record && recordCounter < Constants.MOVING_WINDOW_SIZE + 1) {
                 for (int i = 0; i < Constants.SENSOR_VALUES/2; i++) {
-                    accMax = Math.max(filteredMovingWindow.get(i).getLast(), accMax);
-                    accMin = Math.min(filteredMovingWindow.get(i).getLast(), accMin);
-                }
-
-                for (int i = Constants.SENSOR_VALUES/2; i < Constants.SENSOR_VALUES; i++) {
-                    gyrMax = Math.max(filteredMovingWindow.get(i).getLast(), gyrMax);
-                    gyrMin = Math.min(filteredMovingWindow.get(i).getLast(), gyrMin);
+                    int tempAcc = filteredMovingWindow.get(i).getLast();
+                    int tempGyr = filteredMovingWindow.get(i + Constants.SENSOR_VALUES/2).getLast();
+                    accMax = Math.max(tempAcc, accMax);
+                    accMin = Math.min(tempAcc, accMin);
+                    gyrMax = Math.max(tempGyr, gyrMax);
+                    gyrMin = Math.min(tempGyr, gyrMin);
                 }
                 recordCounter++;
 
