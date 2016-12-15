@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import weka.classifiers.Classifier;
+import weka.core.DenseInstance;
 
 class GestureDetector {
     private ArrayList<LinkedList<Integer>> movingWindow = new ArrayList<>();
@@ -28,7 +29,7 @@ class GestureDetector {
         this.mainActivity = mainActivity;
     }
 
-    void addSample(String sample) {
+    void addSample(String sample) throws Exception {
         Integer[] values = parseStringSample(sample);
         if (values != null) {
             // If window is full, dequeue one sample from head before queuing another
@@ -78,14 +79,16 @@ class GestureDetector {
         }
     }
 
-    private void classify() {
-        float values[][] = normalizeAll();
-        float flattenedValues[] = flattenData(values);
-        //TODO: Give the values to the classifier somehow
+    private void classify() throws Exception {
+        double values[][] = normalizeAll();
+        double flattenedValues[] = flattenData(values);
+        //TODO: Figure out what dataset is needed for Instance
+        DenseInstance instance = new DenseInstance(1.0, flattenedValues);
+        //cls.classifyInstance(instance);
     }
 
-    private float[] flattenData(float[][] data) {
-        float flattenedValues[] = new float[data.length * data[0].length];
+    private double[] flattenData(double[][] data) {
+        double flattenedValues[] = new double[data.length * data[0].length];
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
                 flattenedValues[(data[0].length * i) + j] = data[i][j];
@@ -94,8 +97,8 @@ class GestureDetector {
         return flattenedValues;
     }
 
-    private float[][] normalizeAll() {
-        float values[][] = new float[6][Constants.MOVING_WINDOW_SIZE];
+    private double[][] normalizeAll() {
+        double values[][] = new double[6][Constants.MOVING_WINDOW_SIZE];
 
         for (int i = 0; i < Constants.SENSOR_VALUES/2; i++) {
             values[i] = normalize(accMin, accMax, filteredMovingWindow.get(i));
@@ -104,12 +107,12 @@ class GestureDetector {
         return values;
     }
 
-    float[] normalize(int offset, int max, List<Integer> data) {
+    double[] normalize(int offset, int max, List<Integer> data) {
         int span = max - offset;
-        float[] returnVals = new float[data.size()];
+        double[] returnVals = new double[data.size()];
 
         for(int i = 0; i < data.size(); i++) {
-            returnVals[i] = (float) (data.get(i) - offset) / (float) span;
+            returnVals[i] = (double) (data.get(i) - offset) / (double) span;
         }
         return returnVals;
     }
@@ -164,8 +167,7 @@ class GestureDetector {
     }
 
     void loadClassifier() throws Exception {
-        ObjectInputStream ois = new ObjectInputStream(
-                mainActivity.getResources().openRawResource(R.raw.classifier));
+        ObjectInputStream ois = new ObjectInputStream(mainActivity.getResources().openRawResource(R.raw.classifier));
         cls = (Classifier) ois.readObject();
     }
 }
