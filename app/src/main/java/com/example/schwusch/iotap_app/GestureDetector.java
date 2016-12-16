@@ -18,8 +18,9 @@ import weka.core.Instances;
 class GestureDetector {
     private ArrayList<LinkedList<Integer>> movingWindow = new ArrayList<>();
     private ArrayList<LinkedList<Integer>> filteredMovingWindow = new ArrayList<>();
+    private ArrayList<LinkedList<Integer>> deltaMovingWindow = new ArrayList<>();
     private ArrayList<Attribute> attrList = new ArrayList<>();
-    private ArrayList<String> classVal = new ArrayList<String>();
+    private ArrayList<String> classVal = new ArrayList<>();
     private Classifier cls;
     private MainActivity mainActivity;
     private boolean record = false;
@@ -53,33 +54,39 @@ class GestureDetector {
                         filterFIR(movingWindow.get(i))
                 );
             }
+
             if (!record && isThresholdExceeded()) {
                 record = true;
                 Vibrator v = (Vibrator) mainActivity.getSystemService(Context.VIBRATOR_SERVICE);
-                v.vibrate(100);
-                mainActivity.runOnUiThread(() -> mainActivity.snack("Gesture Detected!"));
+                v.vibrate(50);
+
+                for (LinkedList list : deltaMovingWindow) {
+                    list.clear();
+                }
+                accMax = Integer.MIN_VALUE;
+                accMin = Integer.MAX_VALUE;
+                gyrMax = Integer.MIN_VALUE;
+                gyrMin = Integer.MAX_VALUE;
             }
 
             if (record && recordCounter < Constants.MOVING_WINDOW_SIZE + 1) {
                 for (int i = 0; i < Constants.SENSOR_VALUES/2; i++) {
-                    int tempAcc = filteredMovingWindow.get(i).getLast();
-                    int tempGyr = filteredMovingWindow.get(i + Constants.SENSOR_VALUES/2).getLast();
-                    accMax = Math.max(tempAcc, accMax);
-                    accMin = Math.min(tempAcc, accMin);
-                    gyrMax = Math.max(tempGyr, gyrMax);
-                    gyrMin = Math.min(tempGyr, gyrMin);
+                    int gyrIndex = i + Constants.SENSOR_VALUES/2;
+                    int deltaAcc = filteredMovingWindow.get(i).getLast() - filteredMovingWindow.get(i).get(filteredMovingWindow.get(i).size() - 2);
+                    int deltaGyr = filteredMovingWindow.get(gyrIndex).getLast() - filteredMovingWindow.get(gyrIndex).get(filteredMovingWindow.get(gyrIndex).size() - 2);
+                    accMax = Math.max(deltaAcc, accMax);
+                    accMin = Math.min(deltaAcc, accMin);
+                    gyrMax = Math.max(deltaGyr, gyrMax);
+                    gyrMin = Math.min(deltaGyr, gyrMin);
+                    deltaMovingWindow.get(i).add(deltaAcc);
+                    deltaMovingWindow.get(i + Constants.SENSOR_VALUES/2).add(deltaGyr);
                 }
                 recordCounter++;
 
             } else if(record) {
                 classify();
-
                 record = false;
                 recordCounter = 0;
-                accMax = Integer.MIN_VALUE;
-                accMin = Integer.MAX_VALUE;
-                gyrMax = Integer.MIN_VALUE;
-                gyrMin = Integer.MAX_VALUE;
             }
         }
     }
@@ -101,7 +108,14 @@ class GestureDetector {
         data.add(inst);
         // Tell the dataset what attribute is the class
         data.setClassIndex(0);
-        Log.d("Move Classified as...", classVal.get((int)cls.classifyInstance(inst)));
+        int classIndex = (int)cls.classifyInstance(inst);
+        mainActivity.runOnUiThread(() -> {
+            try {
+                mainActivity.snack("Gesture " + classVal.get(classIndex) + "!");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private double[] flattenData(double[][] data) {
@@ -118,8 +132,8 @@ class GestureDetector {
         double values[][] = new double[6][Constants.MOVING_WINDOW_SIZE];
 
         for (int i = 0; i < Constants.SENSOR_VALUES/2; i++) {
-            values[i] = normalize(accMin, accMax, filteredMovingWindow.get(i));
-            values[i + Constants.SENSOR_VALUES/2] = normalize(gyrMin, gyrMax, filteredMovingWindow.get(i + Constants.SENSOR_VALUES/2));
+            values[i] = normalize(accMin, accMax, deltaMovingWindow.get(i));
+            values[i + Constants.SENSOR_VALUES/2] = normalize(gyrMin, gyrMax, deltaMovingWindow.get(i + Constants.SENSOR_VALUES/2));
         }
         return values;
     }
@@ -180,6 +194,7 @@ class GestureDetector {
         for (int i = 0; i < Constants.SENSOR_VALUES; i++) {
             movingWindow.add(new LinkedList<>());
             filteredMovingWindow.add(new LinkedList<>());
+            deltaMovingWindow.add(new LinkedList<>());
         }
     }
 
@@ -198,8 +213,6 @@ class GestureDetector {
         classVal.add("DOWN");
         classVal.add("RIGHT");
         classVal.add("LEFT");
-        classVal.add("CW");
-        classVal.add("ACW");
         attrList.add(new Attribute("class", classVal));
         for (int i = 0; i < Constants.MOVING_WINDOW_SIZE; i++) {
             attrList.add(new Attribute("AccX" + (i + 1)));
