@@ -11,6 +11,7 @@ import java.util.UUID;
 class DataCollectorRunnable implements Runnable {
     private MainActivity mainActivity;
     private BluetoothDevice mmDevice;
+    private BluetoothSocket mmSocket;
     private InputStream mmInputStream;
     private GestureDetector detector;
 
@@ -59,7 +60,7 @@ class DataCollectorRunnable implements Runnable {
 
     private boolean openBT() {
         try {
-            BluetoothSocket mmSocket = mmDevice.createRfcommSocketToServiceRecord(
+            mmSocket = mmDevice.createRfcommSocketToServiceRecord(
                     UUID.fromString(Constants.BT_SERVICE_UUID));
             mmSocket.connect();
             mmInputStream = mmSocket.getInputStream();
@@ -102,6 +103,8 @@ class DataCollectorRunnable implements Runnable {
                     }
                 }
             } catch (Exception ex) {
+                mmInputStream.close();
+                mmSocket.close();
                 ex.printStackTrace();
                 stopWorker = true;
                 mainActivity.runOnUiThread(() -> mainActivity.btMessage("Bluetooth Stream lost!", true));

@@ -10,11 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import weka.classifiers.Classifier;
+import weka.core.Attribute;
 import weka.core.DenseInstance;
+import weka.core.Instance;
+import weka.core.Instances;
 
 class GestureDetector {
     private ArrayList<LinkedList<Integer>> movingWindow = new ArrayList<>();
     private ArrayList<LinkedList<Integer>> filteredMovingWindow = new ArrayList<>();
+    private ArrayList<Attribute> attrList = new ArrayList<>();
+    private ArrayList<String> classVal = new ArrayList<String>();
     private Classifier cls;
     private MainActivity mainActivity;
     private boolean record = false;
@@ -26,6 +31,7 @@ class GestureDetector {
 
     GestureDetector(MainActivity mainActivity) throws Exception {
         initMovingWindows();
+        initiateAttributeList();
         this.mainActivity = mainActivity;
     }
 
@@ -79,18 +85,30 @@ class GestureDetector {
     }
 
     private void classify() throws Exception {
-        double values[][] = normalizeAll();
-        double flattenedValues[] = flattenData(values);
-        //TODO: Figure out what dataset is needed for Instance
-        DenseInstance instance = new DenseInstance(1.0, flattenedValues);
-        //cls.classifyInstance(instance);
+        /*
+        The double array must be as long as the training datastructure
+        In this case it must be the number of sensors times the number of samples
+        plus one, the class which is the first value...
+         */
+        double flattenedValues[] = flattenData(normalizeAll());
+        // Create a dataset, which holds the structure
+        Instances data = new Instances("Jan-Olof", attrList, 1);
+        // Create an instance to be classified
+        Instance inst = new DenseInstance(1.0, flattenedValues);
+        // Tell the instance which dataset it belongs to
+        inst.setDataset(data);
+        // Add the instance to the dataset
+        data.add(inst);
+        // Tell the dataset what attribute is the class
+        data.setClassIndex(0);
+        Log.d("Move Classified as...", Double.toString(cls.classifyInstance(inst)));
     }
 
     private double[] flattenData(double[][] data) {
-        double flattenedValues[] = new double[data.length * data[0].length];
+        double flattenedValues[] = new double[data.length * data[0].length + 1];
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
-                flattenedValues[(data[0].length * i) + j] = data[i][j];
+                flattenedValues[(data[0].length * i) + j + 1] = data[i][j];
             }
         }
         return flattenedValues;
@@ -106,7 +124,7 @@ class GestureDetector {
         return values;
     }
 
-    double[] normalize(int offset, int max, List<Integer> data) {
+    private double[] normalize(int offset, int max, List<Integer> data) {
         int span = max - offset;
         double[] returnVals = new double[data.size()];
 
@@ -168,5 +186,28 @@ class GestureDetector {
     void loadClassifier() throws Exception {
         ObjectInputStream ois = new ObjectInputStream(mainActivity.getResources().openRawResource(R.raw.classifier));
         cls = (Classifier) ois.readObject();
+    }
+
+    private void initiateAttributeList() {
+        /*
+        The attribute list must resemble the training dataset structure.
+        The first attribute is a list of the classes, the rest is
+        the sensor values.
+         */
+        classVal.add("UP");
+        classVal.add("DOWN");
+        classVal.add("RIGHT");
+        classVal.add("LEFT");
+        classVal.add("CW");
+        classVal.add("ACW");
+        attrList.add(new Attribute("class", classVal));
+        for (int i = 0; i < Constants.MOVING_WINDOW_SIZE; i++) {
+            attrList.add(new Attribute("AccX" + (i + 1)));
+            attrList.add(new Attribute("AccY" + (i + 1)));
+            attrList.add(new Attribute("AccZ" + (i + 1)));
+            attrList.add(new Attribute("GyrX" + (i + 1)));
+            attrList.add(new Attribute("GyrY" + (i + 1)));
+            attrList.add(new Attribute("GyrZ" + (i + 1)));
+        }
     }
 }
