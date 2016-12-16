@@ -101,7 +101,7 @@ class GestureDetector {
         data.add(inst);
         // Tell the dataset what attribute is the class
         data.setClassIndex(0);
-        Log.d("Move Classified as...", Double.toString(cls.classifyInstance(inst)));
+        Log.d("Move Classified as...", classVal.get((int)cls.classifyInstance(inst)));
     }
 
     private double[] flattenData(double[][] data) {
