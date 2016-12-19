@@ -11,12 +11,22 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.json.JSONObject;
+
+public class MainActivity extends AppCompatActivity implements MqttCallback {
     FloatingActionButton fab;
     TextView tvBluetooth, tvServer;
     ProgressBar spinner;
     CoordinatorLayout coordinatorLayout;
     Thread collector;
+    MqttClient mqttClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 beginListenForData();
+                connectBluemix();
             }
         });
     }
@@ -67,5 +78,56 @@ public class MainActivity extends AppCompatActivity {
 
     void snack(String text) {
         Snackbar.make(coordinatorLayout, text, Snackbar.LENGTH_LONG).show();
+    }
+
+    void connectBluemix() {
+        if (mqttClient == null || !mqttClient.isConnected()) {
+            String broker = "tcp://ydlax8.messaging.internetofthings.ibmcloud.com:1883";
+            String clientId = "d:ydlax8:Android:bocker";
+            String password = "";
+            MemoryPersistence persistence = new MemoryPersistence();
+            try {
+                mqttClient = new MqttClient(broker, clientId, persistence);
+                MqttConnectOptions connOpts = new MqttConnectOptions();
+                connOpts.setPassword(password.toCharArray());
+                connOpts.setUserName("use-token-auth");
+                connOpts.setCleanSession(true);
+                mqttClient.connect(connOpts);
+                mqttClient.setCallback(this);
+
+                tvServer.setTextColor(Color.GREEN);
+            } catch (MqttException me) {
+                tvServer.setTextColor(Color.RED);
+                me.printStackTrace();
+            }
+        }
+    }
+
+    void sendActionToBluemix(String message) {
+        try {
+            JSONObject json = new JSONObject();
+            json.put("move", message);
+            JSONObject contJson = new JSONObject();
+            contJson.put("d", json);
+            mqttClient.publish("iot-2/evt/eid/fmt/json", contJson.toString().getBytes(), 0, false);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void connectionLost(Throwable cause) {
+        tvServer.setTextColor(Color.RED);
+        cause.printStackTrace();
+    }
+
+    @Override
+    public void messageArrived(String topic, MqttMessage message) throws Exception {
+        snack(message.toString());
+    }
+
+    @Override
+    public void deliveryComplete(IMqttDeliveryToken token) {
+
     }
 }

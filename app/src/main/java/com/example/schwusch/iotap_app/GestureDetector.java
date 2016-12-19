@@ -5,6 +5,7 @@ import android.os.Vibrator;
 import android.util.Log;
 
 import java.io.ObjectInputStream;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.List;
@@ -112,6 +113,7 @@ class GestureDetector {
         mainActivity.runOnUiThread(() -> {
             try {
                 mainActivity.snack("Gesture " + classVal.get(classIndex) + "!");
+                mainActivity.sendActionToBluemix(classVal.get(classIndex));
             } catch (Exception e) {
                 e.printStackTrace();
             }
