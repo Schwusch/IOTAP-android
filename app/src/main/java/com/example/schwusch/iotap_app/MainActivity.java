@@ -28,12 +28,13 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
     Button btnUp, btnDown, btnLeft, btnRight;
     CoordinatorLayout coordinatorLayout;
     Thread collector;
+    DataCollectorRunnable dataCollect;
     MqttClient mqttClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
 
         tvBluetooth = (TextView) findViewById(R.id.tvBluetooth);
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
         btnRight = (Button) findViewById(R.id.btnRight);
         btnLeft = (Button) findViewById(R.id.btnLeft);
 
-        spinner = (ProgressBar)findViewById(R.id.progressBar1);
+        spinner = (ProgressBar) findViewById(R.id.progressBar1);
         spinner.setVisibility(View.GONE);
 
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
@@ -64,17 +65,20 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
         spinner.setVisibility(View.VISIBLE);
         if (collector == null || !collector.isAlive()) {
             try {
-                collector = new Thread(new DataCollectorRunnable(this));
+                dataCollect = new DataCollectorRunnable(this);
+                collector = new Thread(dataCollect);
                 collector.start();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        } else if (collector != null && collector.isAlive()) {
+            dataCollect.tryToSend();
         }
     }
 
-    void btMessage(String message, boolean fail){
+    void btMessage(String message, boolean fail) {
         spinner.setVisibility(View.GONE);
-        if(fail) {
+        if (fail) {
             tvBluetooth.setTextColor(Color.RED);
         } else {
             tvBluetooth.setTextColor(Color.GREEN);
@@ -84,22 +88,22 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
 
     void snack(String text) {
         Snackbar.make(coordinatorLayout, text, Snackbar.LENGTH_SHORT).show();
-        if(text.contains("UP")) {
+        if (text.contains("UP")) {
             btnLeft.setVisibility(View.GONE);
             btnRight.setVisibility(View.GONE);
             btnDown.setVisibility(View.GONE);
             btnUp.setVisibility(View.VISIBLE);
-        } else if(text.contains("DOWN")) {
+        } else if (text.contains("DOWN")) {
             btnLeft.setVisibility(View.GONE);
             btnRight.setVisibility(View.GONE);
             btnUp.setVisibility(View.GONE);
             btnDown.setVisibility(View.VISIBLE);
-        } else if(text.contains("RIGHT")) {
+        } else if (text.contains("RIGHT")) {
             btnLeft.setVisibility(View.GONE);
             btnDown.setVisibility(View.GONE);
             btnUp.setVisibility(View.GONE);
             btnRight.setVisibility(View.VISIBLE);
-        } else if(text.contains("LEFT")) {
+        } else if (text.contains("LEFT")) {
             btnDown.setVisibility(View.GONE);
             btnRight.setVisibility(View.GONE);
             btnUp.setVisibility(View.GONE);

@@ -4,7 +4,9 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
@@ -13,6 +15,7 @@ class DataCollectorRunnable implements Runnable {
     private BluetoothDevice mmDevice;
     private BluetoothSocket mmSocket;
     private InputStream mmInputStream;
+    private OutputStream mmOutputStream;
     private GestureDetector detector;
 
     DataCollectorRunnable(MainActivity mainActivity) throws Exception {
@@ -64,6 +67,7 @@ class DataCollectorRunnable implements Runnable {
                     UUID.fromString(Constants.BT_SERVICE_UUID));
             mmSocket.connect();
             mmInputStream = mmSocket.getInputStream();
+            mmOutputStream = mmSocket.getOutputStream();
 
         } catch (Exception e) {
             mainActivity.runOnUiThread(() -> mainActivity.btMessage("Can't Connect To " + Constants.BT_DEVICE_NAME + "!", true));
@@ -103,12 +107,32 @@ class DataCollectorRunnable implements Runnable {
                     }
                 }
             } catch (Exception ex) {
-                mmInputStream.close();
-                mmSocket.close();
                 ex.printStackTrace();
                 stopWorker = true;
-                mainActivity.runOnUiThread(() -> mainActivity.btMessage("Bluetooth Stream lost!", true));
+                resetConnection();
             }
         }
+    }
+
+    void tryToSend() {
+        try {
+            mmOutputStream.write(666);
+        } catch (IOException e) {
+            resetConnection();
+        }
+    }
+    //Close connection propperly
+    private void resetConnection() {
+        try {
+            mmInputStream.close();
+        } catch (Exception e) {
+
+        }
+        try {
+            mmSocket.close();
+        } catch (Exception e) {
+
+        }
+        mainActivity.runOnUiThread(() -> mainActivity.btMessage("Bluetooth Stream lost!", true));
     }
 }
