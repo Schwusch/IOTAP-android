@@ -31,4 +31,43 @@
         android:textAlignment="center"
         android:padding="5dp"
         android:layout_margin="5dp" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/btnUp"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="100dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/up"
+            android:visibility="gone"/>
+        <Button
+            android:id="@+id/btnDown"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="100dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/down"
+            android:visibility="gone"/>
+        <Button
+            android:id="@+id/btnRight"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="100dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/right"
+            android:visibility="gone"/>
+        <Button
+            android:id="@+id/btnLeft"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="100dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/left"
+            android:visibility="gone"/>
+
+
+    </RelativeLayout>
 </LinearLayout>

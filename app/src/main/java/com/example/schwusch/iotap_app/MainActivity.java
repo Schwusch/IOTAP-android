@@ -8,6 +8,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -24,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
     FloatingActionButton fab;
     TextView tvBluetooth, tvServer;
     ProgressBar spinner;
+    Button btnUp, btnDown, btnLeft, btnRight;
     CoordinatorLayout coordinatorLayout;
     Thread collector;
     MqttClient mqttClient;
@@ -38,6 +40,10 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
         tvBluetooth.setTextColor(Color.RED);
         tvServer = (TextView) findViewById(R.id.tvServer);
         tvServer.setTextColor(Color.RED);
+        btnUp = (Button) findViewById(R.id.btnUp);
+        btnDown = (Button) findViewById(R.id.btnDown);
+        btnRight = (Button) findViewById(R.id.btnRight);
+        btnLeft = (Button) findViewById(R.id.btnLeft);
 
         spinner = (ProgressBar)findViewById(R.id.progressBar1);
         spinner.setVisibility(View.GONE);
@@ -77,7 +83,33 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
     }
 
     void snack(String text) {
-        Snackbar.make(coordinatorLayout, text, Snackbar.LENGTH_LONG).show();
+        Snackbar.make(coordinatorLayout, text, Snackbar.LENGTH_SHORT).show();
+        if(text.contains("UP")) {
+            btnLeft.setVisibility(View.GONE);
+            btnRight.setVisibility(View.GONE);
+            btnDown.setVisibility(View.GONE);
+            btnUp.setVisibility(View.VISIBLE);
+        } else if(text.contains("DOWN")) {
+            btnLeft.setVisibility(View.GONE);
+            btnRight.setVisibility(View.GONE);
+            btnUp.setVisibility(View.GONE);
+            btnDown.setVisibility(View.VISIBLE);
+        } else if(text.contains("RIGHT")) {
+            btnLeft.setVisibility(View.GONE);
+            btnDown.setVisibility(View.GONE);
+            btnUp.setVisibility(View.GONE);
+            btnRight.setVisibility(View.VISIBLE);
+        } else if(text.contains("LEFT")) {
+            btnDown.setVisibility(View.GONE);
+            btnRight.setVisibility(View.GONE);
+            btnUp.setVisibility(View.GONE);
+            btnLeft.setVisibility(View.VISIBLE);
+        } else {
+            btnLeft.setVisibility(View.GONE);
+            btnRight.setVisibility(View.GONE);
+            btnUp.setVisibility(View.GONE);
+            btnDown.setVisibility(View.GONE);
+        }
     }
 
     void connectBluemix() {

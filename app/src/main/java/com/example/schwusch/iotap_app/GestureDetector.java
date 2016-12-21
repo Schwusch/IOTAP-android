@@ -38,7 +38,11 @@ class GestureDetector {
     }
 
     void addSample(String sample) throws Exception {
+        Log.d("SAMPLE", sample);
         Integer[] values = parseStringSample(sample);
+        //for(int i = 0; i < values.length; i++) {
+        //    Log.d("CUT", values[i] + "");
+        //}
         if (values != null) {
             // If window is full, dequeue one sample from head before queuing another
             if (movingWindow.get(0).size() == Constants.MOVING_WINDOW_SIZE) {
@@ -56,6 +60,10 @@ class GestureDetector {
                 );
             }
 
+           // for(int i = 0; i < filteredMovingWindow.size(); i++) {
+           //     Log.d("Filtered", filteredMovingWindow.get(i).getLast() + "");
+           // }
+
             if (!record && isThresholdExceeded()) {
                 record = true;
                 Vibrator v = (Vibrator) mainActivity.getSystemService(Context.VIBRATOR_SERVICE);
@@ -70,7 +78,7 @@ class GestureDetector {
                 gyrMin = Integer.MAX_VALUE;
             }
 
-            if (record && recordCounter < Constants.MOVING_WINDOW_SIZE + 1) {
+            if (record && recordCounter < Constants.MOVING_WINDOW_SIZE) {
                 for (int i = 0; i < Constants.SENSOR_VALUES/2; i++) {
                     int gyrIndex = i + Constants.SENSOR_VALUES/2;
                     int deltaAcc = filteredMovingWindow.get(i).getLast() - filteredMovingWindow.get(i).get(filteredMovingWindow.get(i).size() - 2);
@@ -98,9 +106,9 @@ class GestureDetector {
         In this case it must be the number of sensors times the number of samples
         plus one, the class which is the first value...
          */
-        double flattenedValues[] = flattenData(normalizeAll());
+        double flattenedValues[] = plattenData();
         // Create a dataset, which holds the structure
-        Instances data = new Instances("Jan-Olof", attrList, 1);
+        Instances data = new Instances("Jan-Olof", attrList, 0);
         // Create an instance to be classified
         Instance inst = new DenseInstance(1.0, flattenedValues);
         // Tell the instance which dataset it belongs to
@@ -110,6 +118,7 @@ class GestureDetector {
         // Tell the dataset what attribute is the class
         data.setClassIndex(0);
         int classIndex = (int)cls.classifyInstance(inst);
+        Log.d("CLASS", classIndex + "");
         mainActivity.runOnUiThread(() -> {
             try {
                 mainActivity.snack("Gesture " + classVal.get(classIndex) + "!");
@@ -120,13 +129,33 @@ class GestureDetector {
         });
     }
 
+    private double[] plattenData() {
+        double flattenedValues[] = new double[deltaMovingWindow.size() * deltaMovingWindow.get(0).size() + 1];
+        int index = 1;
+        for (int i = 0; i < deltaMovingWindow.get(0).size(); i++) {
+            flattenedValues[index++] = deltaMovingWindow.get(0).get(i);
+            flattenedValues[index++] = deltaMovingWindow.get(1).get(i);
+            flattenedValues[index++] = deltaMovingWindow.get(2).get(i);
+            flattenedValues[index++] = deltaMovingWindow.get(3).get(i);
+            flattenedValues[index++] = deltaMovingWindow.get(4).get(i);
+            flattenedValues[index++] = deltaMovingWindow.get(5).get(i);
+        }
+
+        return flattenedValues;
+    }
     private double[] flattenData(double[][] data) {
         double flattenedValues[] = new double[data.length * data[0].length + 1];
-        for (int i = 0; i < data.length; i++) {
+       /* for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
                 flattenedValues[(data[0].length * i) + j + 1] = data[i][j];
             }
+        } */
+        for (int i = 0; i < deltaMovingWindow.get(0).size(); i++) {
+            for (int j = 0; j < deltaMovingWindow.size(); j++) {
+                flattenedValues[i*j + j + 1] = deltaMovingWindow.get(j).get(i);
+            }
         }
+
         return flattenedValues;
     }
 
@@ -201,7 +230,7 @@ class GestureDetector {
     }
 
     void loadClassifier() throws Exception {
-        ObjectInputStream ois = new ObjectInputStream(mainActivity.getResources().openRawResource(R.raw.classifier));
+        ObjectInputStream ois = new ObjectInputStream(mainActivity.getResources().openRawResource(R.raw.classifier6));
         cls = (Classifier) ois.readObject();
     }
 
@@ -215,6 +244,8 @@ class GestureDetector {
         classVal.add("DOWN");
         classVal.add("RIGHT");
         classVal.add("LEFT");
+        classVal.add("QW");
+        classVal.add("AQW");
         attrList.add(new Attribute("class", classVal));
         for (int i = 0; i < Constants.MOVING_WINDOW_SIZE; i++) {
             attrList.add(new Attribute("AccX" + (i + 1)));

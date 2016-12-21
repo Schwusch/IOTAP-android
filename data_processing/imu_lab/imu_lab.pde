@@ -17,7 +17,7 @@ Minim minim;
 AudioPlayer hyah;
 AudioPlayer huff;
 
-String lable="jonathan";
+String lable="LEFT_validate";
 int counter=1;
 int insNum=16;         //length of sliding window
 int ins=1;         //
@@ -173,6 +173,7 @@ void processSerialData(){
                                     counter++;
                                     
                                   } else {
+                                    /*
                                     int accel_max = Math.max(Math.max(g_xAccel.record_max, g_yAccel.record_max), g_zAccel.record_max);
                                     int accel_min = Math.min(Math.min(g_xAccel.record_min, g_yAccel.record_min), g_zAccel.record_min);
                                     
@@ -186,6 +187,15 @@ void processSerialData(){
                                     float[] vRefNorm = normalize(gyro_min, gyro_max, g_vRef.getRecording());
                                     float[] xRateNorm = normalize(gyro_min, gyro_max, g_xRate.getRecording());
                                     float[] yRateNorm = normalize(gyro_min, gyro_max, g_yRate.getRecording());
+                                    */
+
+                                    float[] rec_xAcc = g_xAccel.getRecording();
+                                    float[] rec_yAcc = g_yAccel.getRecording();
+                                    float[] rec_zAcc = g_zAccel.getRecording();
+
+                                    float[] rec_vRef = g_vRef.getRecording();
+                                    float[] rec_xRate = g_xRate.getRecording();
+                                    float[] rec_yRate = g_yRate.getRecording();
                                     
                                     StringBuilder sb = new StringBuilder();
                                     StringBuilder sb2 = new StringBuilder();
@@ -193,11 +203,11 @@ void processSerialData(){
                                     sb.append("\r\n" + lable);
                                     
                                     for(int i = 0; i < insNum; i++) {
-                                      sb.append("," + xAccelNorm[i] + "," + yAccelNorm[i] + "," + zAccelNorm[i] + 
-                                                 "," + vRefNorm[i] + "," + xRateNorm[i] + "," + yRateNorm[i]);
+                                      sb.append("," + rec_xAcc[i] + "," + rec_yAcc[i] + "," + rec_zAcc[i] + 
+                                                 "," + rec_vRef[i] + "," + rec_xRate[i] + "," + rec_yRate[i]);
                                                  
-                                      sb2.append(stamp + "," + xAccelNorm[i] + "," + yAccelNorm[i] + "," + zAccelNorm[i] + 
-                                                 "," + vRefNorm[i] + "," + xRateNorm[i] + "," + yRateNorm[i] + "\r\n");
+                                      sb2.append(stamp + "," + rec_xAcc[i] + "," + rec_yAcc[i] + "," + rec_zAcc[i] + 
+                                                 "," + rec_vRef[i] + "," + rec_xRate[i] + "," + rec_yRate[i] + "\r\n");
                                       stamp++;
                                     }
                                     counter=0;
@@ -216,9 +226,9 @@ void processSerialData(){
                                   }
                                 }
                                 
-                                  if(!record && (Math.abs(g_yAccel.fv - g_yAccel.pfv) > deltaThreshold ||
-                                    Math.abs(g_xAccel.fv - g_xAccel.pfv) > deltaThreshold ||
-                                    Math.abs(g_zAccel.fv - g_zAccel.pfv) > deltaThreshold)) {
+                                  if(!record &&(Math.abs(g_yAccel.delta) > deltaThreshold ||
+                                    		Math.abs(g_xAccel.delta) > deltaThreshold ||
+                                    		Math.abs(g_zAccel.delta) > deltaThreshold)) {
                                       
                                       g_xAccel.startRecording();
                                       g_yAccel.startRecording();
@@ -256,7 +266,7 @@ int m_maxSize;
 int m_startIndex = 0;
 int m_endIndex = 0;
 int m_curSize;
-int windowSize = 5;
+int windowSize = 3;
 int fv = 0;        //latest filtered value
 int pfv = 0;       //previous filtered value 
 int delta = 0;
@@ -293,7 +303,10 @@ void addVal(float val) {
                 delta = fv - pfv;
                 m_data[m_endIndex] = delta;
         } else {
-                m_data[m_endIndex] = val;
+        		pfv = fv;
+        		fv = (int)val;
+        		delta = fv - pfv;
+                m_data[m_endIndex] = delta;
         }
         if(this.record) {
           if(record_index < insNum){
