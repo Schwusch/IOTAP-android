@@ -17,7 +17,7 @@ Minim minim;
 AudioPlayer hyah;
 AudioPlayer huff;
 
-String lable="LEFT_validate";
+String lable="ASDF";
 int counter=1;
 int insNum=16;         //length of sliding window
 int ins=1;         //
@@ -26,10 +26,10 @@ boolean logFile=false;         // logs sensordata
 boolean record = false;
 long stamp=0;
 
-int deltaThreshold = 50;
+int deltaThreshold = 75;
 
 String portName="";
-PrintWriter file,file2;
+PrintWriter file;
 float minGyro=-15000;
 float maxGyro=5000;
 float minAccel=-200;
@@ -61,23 +61,16 @@ void setup()
         
         if(trainFile) {
                 file=createWriter(lable+"_train.csv"); //bool tells to append
-                file2=createWriter(lable+"_train_plot.csv");
                 file.print("Lable,"); //write the file header
                 for(int i=1; i<=insNum; i=i+1) {
                         file.print("AccX"+i+",AccY"+i+",AccZ"+i+",GyrX"+i+",GyrY"+i+",GyrZ"+i+","); //write the file header
                 }
-                file2.print("#,AccX,AccY,AccZ,GyrX,GyrY,GyrZ\r\n"); //write the file header
                 file.flush();
-                file2.flush();
         }
         if(logFile) {
                 file=createWriter("countingTime.csv"); //bool tells to append
                 file.print("#,AccX,AccY,AccZ,GyrX,GyrY,GyrZ\r\n"); //write the file header
                 file.flush();
-
-                file2=createWriter("log_filtered.csv"); //bool tells to append
-                file2.print("#,AccX,AccY,AccZ,GyrX,GyrY,GyrZ\r\n"); //write the file header
-                file2.flush();
         }
 
         String mypp=port();
@@ -117,7 +110,6 @@ void draw()
         {
                 processSerialData();
         }
-
         strokeWeight(1);
         fill(255,255,255);
         g_graph.drawGraphBox();
@@ -162,9 +154,6 @@ void processSerialData(){
                                 if(logFile) {
                                         file.print(stamp+","+xAccel+","+yAccel+","+zAccel+","+vRef+","+xRate+","+yRate+"\r\n");
                                         file.flush();
-
-                                        file2.print(stamp+","+g_xAccel.delta+","+g_yAccel.delta+","+g_zAccel.delta+","+g_vRef.delta+","+g_xRate.delta+","+g_yRate.delta+"\r\n");
-                                        file2.flush();
                                         stamp++;
                                 }
                                 if(trainFile && record) {
@@ -198,16 +187,12 @@ void processSerialData(){
                                     float[] rec_yRate = g_yRate.getRecording();
                                     
                                     StringBuilder sb = new StringBuilder();
-                                    StringBuilder sb2 = new StringBuilder();
                                     
                                     sb.append("\r\n" + lable);
                                     
                                     for(int i = 0; i < insNum; i++) {
                                       sb.append("," + rec_xAcc[i] + "," + rec_yAcc[i] + "," + rec_zAcc[i] + 
                                                  "," + rec_vRef[i] + "," + rec_xRate[i] + "," + rec_yRate[i]);
-                                                 
-                                      sb2.append(stamp + "," + rec_xAcc[i] + "," + rec_yAcc[i] + "," + rec_zAcc[i] + 
-                                                 "," + rec_vRef[i] + "," + rec_xRate[i] + "," + rec_yRate[i] + "\r\n");
                                       stamp++;
                                     }
                                     counter=0;
@@ -217,8 +202,6 @@ void processSerialData(){
                                     text("Gesture Type:"+lable+",  Gesture Number:"+ins,400,530);
                                     file.print(sb);
                                     file.flush();
-                                    file2.print(sb2);
-                                    file2.flush();
                                     ins++;
                                     
                                     huff.rewind();
@@ -310,8 +293,8 @@ void addVal(float val) {
         }
         if(this.record) {
           if(record_index < insNum){
-            record_max = Math.max(record_max, (int)m_data[m_endIndex]);
-            record_min = Math.min(record_min, (int)m_data[m_endIndex]);
+            //record_max = Math.max(record_max, (int)m_data[m_endIndex]);
+            //record_min = Math.min(record_min, (int)m_data[m_endIndex]);
             record_data[record_index] = m_data[m_endIndex];
             record_index++;
           } else {
@@ -423,7 +406,6 @@ String port() {
 
 void mousePressed() {
         if(file != null) file.close();
-        if(file2 != null) file2.close();
         Runtime rt = Runtime.getRuntime();
         try {
                 rt.exec("gnome-terminal --working-directory=IOTAP-android/data_processing/imu_lab --execute python plot_log_filtered.py " + lable + "_train_plot.csv");

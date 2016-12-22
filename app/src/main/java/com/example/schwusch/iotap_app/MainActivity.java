@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
     FloatingActionButton fab;
     TextView tvBluetooth, tvServer;
     ProgressBar spinner;
-    Button btnUp, btnDown, btnLeft, btnRight;
+    Button btnUp, btnDown, btnLeft, btnRight, btnQw, btnAqw;
     CoordinatorLayout coordinatorLayout;
     Thread collector;
     DataCollectorRunnable dataCollect;
@@ -45,6 +45,8 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
         btnDown = (Button) findViewById(R.id.btnDown);
         btnRight = (Button) findViewById(R.id.btnRight);
         btnLeft = (Button) findViewById(R.id.btnLeft);
+        btnQw = (Button) findViewById(R.id.btnQw);
+        btnAqw = (Button) findViewById(R.id.btnAqw);
 
         spinner = (ProgressBar) findViewById(R.id.progressBar1);
         spinner.setVisibility(View.GONE);
@@ -92,27 +94,44 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
             btnLeft.setVisibility(View.GONE);
             btnRight.setVisibility(View.GONE);
             btnDown.setVisibility(View.GONE);
+            btnAqw.setVisibility(View.GONE);
+            btnQw.setVisibility(View.GONE);
             btnUp.setVisibility(View.VISIBLE);
         } else if (text.contains("DOWN")) {
             btnLeft.setVisibility(View.GONE);
             btnRight.setVisibility(View.GONE);
             btnUp.setVisibility(View.GONE);
+            btnAqw.setVisibility(View.GONE);
+            btnQw.setVisibility(View.GONE);
             btnDown.setVisibility(View.VISIBLE);
         } else if (text.contains("RIGHT")) {
             btnLeft.setVisibility(View.GONE);
             btnDown.setVisibility(View.GONE);
             btnUp.setVisibility(View.GONE);
+            btnAqw.setVisibility(View.GONE);
+            btnQw.setVisibility(View.GONE);
             btnRight.setVisibility(View.VISIBLE);
         } else if (text.contains("LEFT")) {
             btnDown.setVisibility(View.GONE);
             btnRight.setVisibility(View.GONE);
             btnUp.setVisibility(View.GONE);
+            btnAqw.setVisibility(View.GONE);
+            btnQw.setVisibility(View.GONE);
             btnLeft.setVisibility(View.VISIBLE);
-        } else {
+        } else if(text.contains("AQW")){
             btnLeft.setVisibility(View.GONE);
             btnRight.setVisibility(View.GONE);
             btnUp.setVisibility(View.GONE);
             btnDown.setVisibility(View.GONE);
+            btnAqw.setVisibility(View.VISIBLE);
+            btnQw.setVisibility(View.GONE);
+        } else if(text.contains("")){
+            btnLeft.setVisibility(View.GONE);
+            btnRight.setVisibility(View.GONE);
+            btnUp.setVisibility(View.GONE);
+            btnDown.setVisibility(View.GONE);
+            btnQw.setVisibility(View.VISIBLE);
+            btnAqw.setVisibility(View.GONE);
         }
     }
 

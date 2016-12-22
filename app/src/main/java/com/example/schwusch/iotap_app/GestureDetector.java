@@ -230,7 +230,7 @@ class GestureDetector {
     }
 
     void loadClassifier() throws Exception {
-        ObjectInputStream ois = new ObjectInputStream(mainActivity.getResources().openRawResource(R.raw.classifier6));
+        ObjectInputStream ois = new ObjectInputStream(mainActivity.getResources().openRawResource(R.raw.classifier62));
         cls = (Classifier) ois.readObject();
     }
 
