@@ -30,7 +30,9 @@ class GestureDetector {
     private int accMin = Integer.MAX_VALUE;
     private int gyrMax = Integer.MIN_VALUE;
     private int gyrMin = Integer.MAX_VALUE;
-
+    private double idleThreshold = 0.70;
+    private final int IDLE = 6;
+    private String[] moves = {"UP", "DOWN", "RIGHT", "LEFT", "QW", "AQW", "IDLE"};
     GestureDetector(MainActivity mainActivity) throws Exception {
         initMovingWindows();
         initiateAttributeList();
@@ -38,11 +40,7 @@ class GestureDetector {
     }
 
     void addSample(String sample) throws Exception {
-        Log.d("SAMPLE", sample);
         Integer[] values = parseStringSample(sample);
-        //for(int i = 0; i < values.length; i++) {
-        //    Log.d("CUT", values[i] + "");
-        //}
         if (values != null) {
             // If window is full, dequeue one sample from head before queuing another
             if (movingWindow.get(0).size() == Constants.MOVING_WINDOW_SIZE) {
@@ -59,10 +57,6 @@ class GestureDetector {
                         filterFIR(movingWindow.get(i))
                 );
             }
-
-           // for(int i = 0; i < filteredMovingWindow.size(); i++) {
-           //     Log.d("Filtered", filteredMovingWindow.get(i).getLast() + "");
-           // }
 
             if (!record && isThresholdExceeded()) {
                 record = true;
@@ -117,12 +111,25 @@ class GestureDetector {
         data.add(inst);
         // Tell the dataset what attribute is the class
         data.setClassIndex(0);
-        int classIndex = (int)cls.classifyInstance(inst);
+        //int classIndex = (int)cls.classifyInstance(inst);
+        double[] probs = cls.distributionForInstance(inst);
+        int classIndex = IDLE;
+        double probability = idleThreshold;
+
+        for(int i = 0; i < probs.length; i++) {
+            Log.d("PROBABILITY" , probs[i] + "");
+            if(probs[i] > probability) {
+                classIndex = i;
+                probability = probs[i];
+            }
+        }
+        String move = moves[classIndex];
+        int p = (int)(probability * 100);
         Log.d("CLASS", classIndex + "");
         mainActivity.runOnUiThread(() -> {
             try {
-                mainActivity.snack("Gesture " + classVal.get(classIndex) + "!");
-                mainActivity.sendActionToBluemix(classVal.get(classIndex));
+                mainActivity.snack("Gesture " + move + "!    Probability: " + p + "%");
+                mainActivity.sendActionToBluemix(move);
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -125,12 +125,19 @@ public class MainActivity extends AppCompatActivity implements MqttCallback {
             btnDown.setVisibility(View.GONE);
             btnAqw.setVisibility(View.VISIBLE);
             btnQw.setVisibility(View.GONE);
-        } else if(text.contains("")){
+        } else if(text.contains("QW")){
             btnLeft.setVisibility(View.GONE);
             btnRight.setVisibility(View.GONE);
             btnUp.setVisibility(View.GONE);
             btnDown.setVisibility(View.GONE);
             btnQw.setVisibility(View.VISIBLE);
+            btnAqw.setVisibility(View.GONE);
+        } else {                                //idle state
+            btnLeft.setVisibility(View.GONE);
+            btnRight.setVisibility(View.GONE);
+            btnUp.setVisibility(View.GONE);
+            btnDown.setVisibility(View.GONE);
+            btnQw.setVisibility(View.GONE);
             btnAqw.setVisibility(View.GONE);
         }
     }
